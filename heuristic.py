@@ -56,3 +56,8 @@ def fit(items, fit='first', sortedlist=False, box_size=1000, verbose=True, min_t
 
     return boxes
 
+
+def neighbour(kind=r, order=shuffle, randomseed=):
+    #desempacotar caixa
+    if 
+
