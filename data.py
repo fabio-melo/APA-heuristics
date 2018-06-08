@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+""" data.py - classes e funções de carregamento/exportação """
+
+
 import sys, random, json
 
 class Item:
@@ -13,17 +19,29 @@ class Box:
         self.items = []
     
     def add_item(self, item):
+        """ Adiciona um item na caixa, e atualiza seus valores """
         self.items.append(item)
         self.used_size += item.size
         self.total_value += item.value
 
     def can_add(self, item):
+        """ Verifica se pode adicionar item na caixa, retorna True se verdade"""
         return True if self.used_size + item.size <= self.total_size else False
 
     def can_add_without_tax(self, item, min_tax):
-        return True if self.used_size + item.size <= self.total_size and self.total_value + item.value <= min_tax else False
+        """ Verifica se pode adicionar item na caixa sem ultrapassar o valor
+            definido como mínimo taxável. retorna True se verdade """
+        return True if self.used_size + item.size <= self.total_size \
+                    and self.total_value + item.value <= min_tax else False
 
-    def profit_per_box(self, base_box_cost=1, box_rate=0.001, tax_rate=10, min_tax=50):
+    def profit_per_box(self, base_box_cost=5, box_rate=0.005, tax_rate=10, \
+                       min_tax=50):
+        """ Itera entre cada item de uma caixa e calcula seu lucro
+        Parametros:
+            base_box_cost: custo minimo de cada caixa
+            box_rate: um valor que varia de acordo com o peso da caixa
+            tax_rate: valor da taxa de imposto
+            min_tax: tamanho máximo de caixa para que não seja taxada """
         box_cost = int(base_box_cost + (box_rate * self.used_size))
         if self.total_value <= min_tax:
             profit = self.total_value - box_cost
@@ -31,36 +49,38 @@ class Box:
         else:   
             taxation = (self.total_value / 100) * tax_rate
             profit = self.total_value - int(taxation) - box_cost
-           # print("taxado: "+ str(taxation) + "-" + str(box_cost) + "--" + str(self.total_value) + "= " + str(profit))
+           # print("taxado: "+ str(taxation) + "-" + str(box_cost) + "--" +
+           # str(self.total_value) + "= " + str(profit))
         return profit
 
-#----------------------------#
-# Funções Auxiliares         #
-#----------------------------#
 
-def generate_item_list(amount=100, max_size=1000, max_value=100,savefile=False):
-    packing_list = []
-    for _ in range(amount):
-        item_packed = Item(random.randint(1, max_size),random.randint(1, max_value))
-        packing_list.append(item_packed)
-    if savefile: save_to_file(packing_list, file=savefile)
-    return packing_list
+class Result:
+    def __init__(self):
+        self.list_of_boxes = []
+        self.fit = ''
+        self.fit_order = ''
+        self.sort_order = ''
+        self.nb_algo = ''
+        self.nb_order = ''
+        self.nb_pos = ''
 
+    def add_from_heuristic(self, list_of_boxes, fit, fit_order,  sort_order):
+        self.list_of_boxes = list_of_boxes
+        self.fit = fit
+        self.fit_order = fit_order
+        self.sort_order = sort_order
+    def add_from_meta(self, list_of_boxes, nb_algo, nb_order, nb_pos):
+        self.nb_algo = nb_algo
+        self.nb_order = nb_order
+        self.nb_pos = nb_pos
 
-def generate_pareto_list(amount=100, medium_value=50, medium_size=300, max_size=1000, max_value=100,verbose=False,savefile=False):
-    packing_list = []
-    percent20, percent80 = int((amount/100)*20), int((amount/100)*80)
-    for _ in range(percent80):
-        item_packed = Item(random.randint(1, medium_size),random.randint(1, medium_value))
-        packing_list.append(item_packed)
-    for _ in range(percent20):
-        item_packed = Item(random.randint(medium_size, max_size),random.randint(medium_value, max_value))
-        packing_list.append(item_packed)
-    if verbose: 
-        for i in packing_list: print(str(i.value),str(i.size))
+    
+        
 
-    if savefile: save_to_file(packing_list, file=savefile)
-    return packing_list
+#------------------------------------------------------------------------------#
+# Arquivos                                                                     #
+#------------------------------------------------------------------------------#
+
 
 def save_to_file(pack, file='instance.txt'):
     packlist = []
