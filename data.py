@@ -55,26 +55,36 @@ class Box:
 
 
 class Result:
-    def __init__(self):
-        self.list_of_boxes = []
-        self.fit = ''
-        self.fit_order = ''
-        self.sort_order = ''
-        self.nb_algo = ''
-        self.nb_order = ''
-        self.nb_pos = ''
-
-    def add_from_heuristic(self, list_of_boxes, fit, fit_order,  sort_order):
-        self.list_of_boxes = list_of_boxes
-        self.fit = fit
+    def __init__(self,list_of_boxes='',fit_order='',sort_order='',nb_algo='',\
+                 nb_order='',nb_pos='',box_amount='', profit=''):
+        self.list_of_boxes =list_of_boxes
         self.fit_order = fit_order
         self.sort_order = sort_order
-    def add_from_meta(self, list_of_boxes, nb_algo, nb_order, nb_pos):
         self.nb_algo = nb_algo
         self.nb_order = nb_order
         self.nb_pos = nb_pos
+        self.box_amount = box_amount
+        self.profit = profit
 
-    
+    def add_from_heuristic(self, list_of_boxes, fit_order, sort_order, profit, box_amount):
+        self.list_of_boxes = list_of_boxes
+        self.fit_order = fit_order
+        self.profit = profit
+        self.box_amount = box_amount
+
+    def add_from_meta(self, list_of_boxes, nb_algo, nb_order, nb_pos, profit):
+        self.nb_algo = nb_algo
+        self.nb_order = nb_order
+        self.nb_pos = nb_pos
+        self.profit = profit
+
+    def print_result_h(self):
+        print(str(self.fit_order) + ' ' + str(self.sort_order)+ ' ' + str(self.profit))
+
+    def print_result(self):
+        print(str(self.profit) + " " + str(self.box_amount) + ' :' + str(self.nb_algo) + ',' + str(self.nb_order) + ',' + str(self.nb_pos) + '/' + str(self.fit_order) + ',' + str(self.sort_order)+ ' ')
+
+        
         
 
 #------------------------------------------------------------------------------#

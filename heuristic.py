@@ -5,7 +5,7 @@
 
 import sys, random, copy
 from operator import itemgetter, attrgetter
-from data import Item, Box, load_from_file
+from data import Item, Box, load_from_file, Result
 
 #------------------------------------------------------------------------------#
 #   Funções Auxiliares                                                         #
@@ -121,19 +121,18 @@ def multifit(file=None,taxrate=10,verbose=False):
     fit_option = ['first','best','worst','avoidtaxes']
     sort_option = [True, False, 'cheapest', 'expensive']
 
-    results,finalresult = {},{}
+    results = []
 
 
     for f in fit_option:
         for s in sort_option:
             mybox = fit(my_items,fit=f,sortedlist=s,verbose=False)
-            l = len(mybox)
-            results[f,s,l] = calc_profit(mybox, taxrate), mybox
+            res = Result(list_of_boxes=mybox, fit_order=f,sort_order=s,profit=calc_profit(mybox,taxrate),box_amount=len(mybox))
+            results.append(res)
 
-    
-    finalresult = max(results.items(), key=itemgetter(1))
-
-    if verbose: print(str(finalresult[0]) + str(finalresult[1][0]))
+    results = sorted(results, key=attrgetter('profit'),reverse=True)
+    finalresult = results[0]
+    if verbose: finalresult.print_result_h()
     return finalresult
 
 
@@ -142,28 +141,27 @@ def multifit(file=None,taxrate=10,verbose=False):
 # -----------------------------------------------------------------------------#
 
 
-def nbhood(list_of_boxes, kind='r', algo='top_to_bottom', \
+def nbhood(result_h, algo='top_to_bottom', \
            taxrate=10, randomseed="i_wish_i_was_dead", verbose=False):
     """ Recebe uma Solução (Lista de Caixas) e aplica a heurística definida. """
     #Ordem das Caixas
-    order = ['unordered','biggest','smallest','expensive','cheapest','shuffle']
+    order = ['unordered','shuffle'] #'smallest','expensive','biggest','cheapest',
+    results = []
+    results.append(result_h)
+    boxes_ord = copy.deepcopy(result_h.list_of_boxes)
     
-    nb_results = {}
-    nb_results['original','original','original'] = calc_profit(list_of_boxes, taxrate)
-
 
     if algo == 'top_to_bottom':
         
         # desempacotar primeira caixa a transforma em duas de tamanho menor
         # só trás melhorias tangiveis se a heuristica usada for first,best ou worst fit
         
-        boxes_ord = copy.deepcopy(list_of_boxes)
         for o in order:
             if o == 'unordered': pass
-            if o == 'biggest': boxes_ord = sorted(boxes_ord, key=lambda x: x.used_size, reverse=True)
-            if o == 'smallest': boxes_ord = sorted(boxes_ord, key=lambda x: x.used_size)
-            if o == 'expensive': boxes_ord = sorted(boxes_ord, key=lambda x: x.total_value, reverse=True)
-            if o == 'cheapest': boxes_ord = sorted(boxes_ord, key=lambda x: x.total_value)
+            #if o == 'biggest': boxes_ord = sorted(boxes_ord, key=lambda x: x.used_size, reverse=True)
+            #if o == 'smallest': boxes_ord = sorted(boxes_ord, key=lambda x: x.used_size)
+            #if o == 'expensive': boxes_ord = sorted(boxes_ord, key=lambda x: x.total_value, reverse=True)
+            #if o == 'cheapest': boxes_ord = sorted(boxes_ord, key=lambda x: x.total_value)
             if o == 'shuffle': random.seed(randomseed); random.shuffle(boxes_ord)
             
 
@@ -184,20 +182,20 @@ def nbhood(list_of_boxes, kind='r', algo='top_to_bottom', \
                 
                 boxes.append(minibox1)
                 boxes.append(minibox2)
-
-                nb_results[algo,o,box] = calc_profit(boxes, taxrate), copy.deepcopy(boxes)
+                res = Result(list_of_boxes=copy.deepcopy(boxes), nb_algo=algo, \
+                            nb_order=o, nb_pos=box, box_amount=len(boxes), profit=calc_profit(boxes,taxrate), \
+                            fit_order=result_h.fit_order, sort_order=result_h.sort_order)                        
+                results.append(res)
 
     if algo == "repack":
         # tenta juntar caixas, essa heurista só faz efeito no algoritimo avoidtaxes
 
-
-        boxes_ord = copy.deepcopy(list_of_boxes)
         for o in order:
             if o == 'unordered': pass
-            if o == 'biggest': boxes_ord = sorted(boxes_ord, key=lambda x: x.used_size, reverse=True)
-            if o == 'smallest': boxes_ord = sorted(boxes_ord, key=lambda x: x.used_size)
-            if o == 'expensive': boxes_ord = sorted(boxes_ord, key=lambda x: x.total_value, reverse=True)
-            if o == 'cheapest': boxes_ord = sorted(boxes_ord, key=lambda x: x.total_value)
+            #if o == 'biggest': boxes_ord = sorted(boxes_ord, key=lambda x: x.used_size, reverse=True)
+            #if o == 'smallest': boxes_ord = sorted(boxes_ord, key=lambda x: x.used_size)
+            #if o == 'expensive': boxes_ord = sorted(boxes_ord, key=lambda x: x.total_value, reverse=True)
+            #if o == 'cheapest': boxes_ord = sorted(boxes_ord, key=lambda x: x.total_value)
             if o == 'shuffle': random.seed(randomseed); random.shuffle(boxes_ord)
             
             for box in range(len(boxes_ord)):
@@ -216,24 +214,42 @@ def nbhood(list_of_boxes, kind='r', algo='top_to_bottom', \
                             boxes.pop(i);break
                     else: add_phase = False
                 if newbox.items: boxes.append(newbox)
-                nb_results[algo,o,box] = calc_profit(boxes, taxrate), copy.deepcopy(boxes)
-    finalresult = max(nb_results.items(), key=itemgetter(1))[0]
-    if verbose: print(finalresult)
+                res = Result(list_of_boxes=copy.deepcopy(boxes), nb_algo=algo, \
+                            nb_order=o, nb_pos=box, box_amount=len(boxes), profit=calc_profit(boxes,taxrate), \
+                            fit_order=result_h.fit_order, sort_order=result_h.sort_order)                        
+                results.append(res)
+
+
+    results = sorted(results, key=attrgetter('profit'),reverse=True)
+    if verbose: 
+        for i in range(5):
+            results[i].print_result()
+        print("Melhor Resultado da Vizinhança"); results[0].print_result()        
+    finalresult = results[0]
     return finalresult
 
 
-def vnd(list_of_boxes, taxrate=20, algo='top_to_bottom'):
-    
-    best_solution = calc_profit(list_of_boxes, taxrate) #calcular o valor da solução inicial
-    
+def vnd(solution, taxrate=10, algo='top_to_bottom', randomseed="i_wish_i_was_dead",\
+        verbose = False):
+    old_profit = solution.profit    
     it = 0
 
     while True:
-        new_best = nbhood(l, algo=algo) 
-        if new_best[0][0] == best_solution: break
-        it += 1
-    
-    return
+        if verbose: print("> Visitando Vizinhança " + str(it+1))
+        new_result = nbhood(solution, algo=algo, taxrate=taxrate, randomseed=randomseed,\
+                            verbose=verbose)
+        if new_result.profit > solution.profit:
+            solution = new_result
+            it += 1
+        else: break
+    if verbose:
+        print()
+        print(">> Melhor Resultado Final:")
+        solution.print_result()
+        print("Melhoria: " + str(old_profit) + " ---> " + str(solution.profit) + " (+" + str(solution.profit - old_profit) + ")")
+        print("Vizinhanças Visitadas para geração do resultado: " + str(it))
+
+    return solution
 
 
 

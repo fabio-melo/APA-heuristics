@@ -72,8 +72,11 @@ def generate_pareto_list(amount=100, medium_value=50, medium_size=300, max_size=
     return packing_list
 
 
-
-
+def test(file="pareto.txt", algo='top_to_bottom', taxrate=10, verbose=True):
+     #test(file="random2.txt", algo="repack", taxrate=20)
+    b = multifit(file,taxrate=taxrate, verbose=verbose)
+    nb = vnd(b,taxrate=taxrate,algo=algo,verbose=verbose)
+    return nb
 
 if __name__ == '__main__':
     if '--random-gen' in argv: generate_item_list(amount=200,max_size=1000,max_value=100,savefile='random.txt');print("Lista Aleatória Gerada")
