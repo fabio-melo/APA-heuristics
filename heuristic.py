@@ -142,7 +142,7 @@ def multifit(file=None,taxrate=10,verbose=False):
 
 
 def nbhood(result_h, algo='top_to_bottom', \
-           taxrate=10, randomseed="i_wish_i_was_dead", verbose=False):
+           taxrate=10, randomseed="i_wish_i_was_dead", verbose=False, meta=False):
     """ Recebe uma Solução (Lista de Caixas) e aplica a heurística definida. """
     #Ordem das Caixas
     order = ['unordered','shuffle'] #'smallest','expensive','biggest','cheapest',
@@ -226,7 +226,9 @@ def nbhood(result_h, algo='top_to_bottom', \
             results[i].print_result()
         print("Melhor Resultado da Vizinhança"); results[0].print_result()        
     finalresult = results[0]
-    return finalresult
+
+    if meta: return results
+    else: return finalresult
 
 
 def vnd(solution, taxrate=10, algo='top_to_bottom', randomseed="i_wish_i_was_dead",\
@@ -250,6 +252,41 @@ def vnd(solution, taxrate=10, algo='top_to_bottom', randomseed="i_wish_i_was_dea
         print("Vizinhanças Visitadas para geração do resultado: " + str(it))
 
     return solution
+
+
+
+def smarter_vnd(solutions, taxrate=10, algo='top_to_bottom', randomseed="i_wish_i_was_dead",\
+        verbose = False):
+    
+    old_profit = solutions[0].profit
+    optimal_solution = solutions[0]
+    it,bk = 0,0
+
+    while solutions:
+        if verbose: print("> Visitando Vizinhança " + str(it+1))
+        new_solutions = nbhood(solutions[0], algo=algo, taxrate=taxrate, randomseed=randomseed,\
+                            verbose=verbose, meta=True)
+
+        if new_solutions[0].profit > optimal_solution.profit:
+            solutions = new_solutions
+            optimal_solution = solutions[0]
+            it += 1
+            bk = 0
+        else:
+            bk += 1
+            if bk == 10: break
+            print("Fazendo Backtracking: " + str(bk)) 
+            solutions.pop(0)
+
+            
+    if verbose:
+        print()
+        print(">> Melhor Resultado Final:")
+        optimal_solution.print_result()
+        print("Melhoria: " + str(old_profit) + " ---> " + str(optimal_solution.profit) + " (+" + str(optimal_solution.profit - old_profit) + ")")
+        print("Vizinhanças Visitadas para geração do resultado: " + str(it))
+
+    return solutions
 
 
 

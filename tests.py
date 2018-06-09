@@ -75,7 +75,7 @@ def generate_pareto_list(amount=100, medium_value=50, medium_size=300, max_size=
 def test(file="pareto.txt", algo='top_to_bottom', taxrate=10, verbose=True):
      #test(file="random2.txt", algo="repack", taxrate=20)
     b = multifit(file,taxrate=taxrate, verbose=verbose)
-    nb = vnd(b,taxrate=taxrate,algo=algo,verbose=verbose)
+    nb = vnd(b,taxrate=taxrate,algo=algo,verbose=verbosea)
     return nb
 
 if __name__ == '__main__':
