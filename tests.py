@@ -75,7 +75,7 @@ def generate_pareto_list(amount=100, medium_value=50, medium_size=300, max_size=
 def test(file="pareto.txt", algo='top_to_bottom', taxrate=10, verbose=True):
      #test(file="random2.txt", algo="repack", taxrate=20)
     b = multifit(file,taxrate=taxrate, verbose=verbose)
-    nb = vnd(b,taxrate=taxrate,algo=algo,verbose=verbosea)
+    nb = vnd(b,taxrate=taxrate,algo=algo,verbose=verbose)
     return nb
 
 if __name__ == '__main__':
@@ -83,5 +83,7 @@ if __name__ == '__main__':
     if '--pareto-gen' in argv: generate_pareto_list(amount=200, medium_size=400, medium_value=50, max_size=1000,max_value=100,savefile='pareto.txt')
     if '--stress' in argv: stresstest(file=argv[2])
     if '-i' in argv: embed()
+    if 'idk' in argv: vnd(nbhood(multifit(file='pareto.txt',taxrate=10,verbose=True),taxrate=10,verbose=True),taxrate=10,verbose=True)
+    if 'wtflol' in argv:  smarter_vnd(nbhood(multifit(file='random.txt',taxrate=20,verbose=True),taxrate=20,verbose=True,meta=True),taxrate=20,verbose=True)
     #stresstest('pareto')
     #stresstest('normal')

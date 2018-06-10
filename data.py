@@ -3,15 +3,23 @@
 
 """ data.py - classes e funções de carregamento/exportação """
 
-
 import sys, random, json
 
+
+#------------------------------------------------------------------------------#
+# Classes                                                                      #
+#------------------------------------------------------------------------------#
+
+
 class Item:
+    """ Item (Classe): cada item a ser guardado """
+
     def __init__(self, size, value):
         self.size = size
         self.value = value
 
 class Box:
+    """ Box (Classe): cada caixa onde serão armazenados os items """
     def __init__(self, size=1000):
         self.total_size = size
         self.used_size = 0
@@ -55,6 +63,9 @@ class Box:
 
 
 class Result:
+    """ Result (Classe): armazena os resultados das heuristicas gulosas e
+    das buscas de vizinhança """
+
     def __init__(self,list_of_boxes='',fit_order='',sort_order='',nb_algo='',\
                  nb_order='',nb_pos='',box_amount='', profit=''):
         self.list_of_boxes =list_of_boxes
@@ -66,23 +77,17 @@ class Result:
         self.box_amount = box_amount
         self.profit = profit
 
-    def add_from_heuristic(self, list_of_boxes, fit_order, sort_order, profit, box_amount):
-        self.list_of_boxes = list_of_boxes
-        self.fit_order = fit_order
-        self.profit = profit
-        self.box_amount = box_amount
-
-    def add_from_meta(self, list_of_boxes, nb_algo, nb_order, nb_pos, profit):
-        self.nb_algo = nb_algo
-        self.nb_order = nb_order
-        self.nb_pos = nb_pos
-        self.profit = profit
 
     def print_result_h(self):
-        print(str(self.fit_order) + ' ' + str(self.sort_order)+ ' ' + str(self.profit))
+        """ Imprime os Resultados das Heuristicas de Construção """
+        print(str(self.profit) + " " + str(self.box_amount) + ' :' \
+        + str(self.fit_order) + ',' + str(self.sort_order)+ ' ')
 
     def print_result(self):
-        print(str(self.profit) + " " + str(self.box_amount) + ' :' + str(self.nb_algo) + ',' + str(self.nb_order) + ',' + str(self.nb_pos) + '/' + str(self.fit_order) + ',' + str(self.sort_order)+ ' ')
+        """ Impreme os Resultados dos Movimentos de Vizinhança """
+        print(str(self.profit) + " " + str(self.box_amount) + ' :' + \
+        str(self.nb_algo) + ',' + str(self.nb_order) + ',' + str(self.nb_pos) \
+        + '/' + str(self.fit_order) + ',' + str(self.sort_order)+ ' ')
 
         
         
@@ -93,6 +98,7 @@ class Result:
 
 
 def save_to_file(pack, file='instance.txt'):
+    """ Salva uma lista de caixas como arquivo """
     packlist = []
     for p in pack:
         item = [p.size, p.value]
@@ -100,6 +106,7 @@ def save_to_file(pack, file='instance.txt'):
     with open(file, 'w') as f: json.dump(packlist, f)
 
 def load_from_file(file):
+    """ Carrega lista de caixas de um arquivo """
     with open(file, 'r') as f:
         packlist = []
         unpack = json.load(f)
