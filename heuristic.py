@@ -142,7 +142,7 @@ def multifit(file=None,taxrate=10,verbose=False):
 
 
 def nbhood(result_h, algo='auto', \
-           taxrate=10, randomseed="i_wish_i_was_dead", verbose=False, meta=False):
+           taxrate=10, randomseed="i_will_survive_this", verbose=False, meta=False):
     """ Recebe uma Solução e executa a heurística mais aplicável para gerar sua vizinhança. """
 
     #Ordem das Caixas: escolhe as ordens que serão usadas na busca de vizinhança
@@ -240,7 +240,7 @@ def nbhood(result_h, algo='auto', \
     else: return finalresult #se só queremos o melhor valor, retornamos apenas ele
 
 
-def vnd(solution, taxrate=10, algo='auto', randomseed="i_wish_i_was_dead",\
+def vnd(solution, taxrate=10, algo='auto', randomseed="i_will_survive_this",\
         verbose = False):
     """ Descida de Vizinhança Variável:
     Executa a busca de vizinhança várias vezes até a achar um valor ótimo onde não é possível melhorar """
@@ -262,17 +262,18 @@ def vnd(solution, taxrate=10, algo='auto', randomseed="i_wish_i_was_dead",\
         solution.print_result()
         print("Melhoria: " + str(old_profit) + " ---> " + str(solution.profit) + " (+" + str(solution.profit - old_profit) + ")")
         print("Vizinhanças Visitadas para geração do resultado: " + str(it))
-
     return solution #retorna a melhor solução (objeto Result)
 
 
 
-def smarter_vnd(solutions, taxrate=10, algo='auto', randomseed="i_wish_i_was_dead",\
+def smarter_vnd(solutions, taxrate=10, algo='auto', randomseed="i_will_survive_this",\
         verbose = False):
     """ Metaheurística: VND com Backtracking """
     old_profit = solutions[0].profit #função de avaliação inicial
     optimal_solution = solutions[0] #solução otima inicial
     it,bk = 0,0 #contadores de vizinhanças visitadas e backtracking
+    global_maximum = solutions[0]
+    older_solution = solutions[0]
 
     while solutions: #enquanto ouver soluções na lista
         if verbose: print("> Visitando Vizinhança " + str(it+1))
@@ -281,13 +282,22 @@ def smarter_vnd(solutions, taxrate=10, algo='auto', randomseed="i_wish_i_was_dea
 
         if new_solutions[0].profit > optimal_solution.profit: # o se o valor da melhor nova solução for melhor que a solução otima anterior
             solutions = new_solutions #atualiza o valor da lista de soluções
+            older_solution = optimal_solution
             optimal_solution = solutions[0] # a nova solução otima é a primeira da lista
+            if optimal_solution.profit > global_maximum.profit:
+                global_maximum = optimal_solution
             it += 1 #atualiza o contador de vizinhanaça
             bk = 0 #reseta o contador de backtracking
         else:
             bk += 1 #incrementa o backgracking
-            if bk == 20: break # limita o backtracking em 20 vizinhanças, por questões de tempo computacional
-            print("Fazendo Backtracking: " + str(bk)) 
+            if bk == 10: 
+                if global_maximum > optimal_solution:
+                    optimal_solution = global_maximum
+                    break # limita o backtracking em 10 vizinhanças, por questões de tempo computacional
+            print("Fazendo Backtracking: " + str(bk))
+            if optimal_solution.profit > global_maximum.profit:
+                global_maximum = optimal_solution
+            optimal_solution = older_solution 
             solutions.pop(0) #remove a solução testada da lista.
 
             
