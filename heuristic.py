@@ -17,7 +17,7 @@ def print_boxes(boxes):
     for b in boxes: print("(" + str(b.used_size) + "," + str(b.total_value) + ")",end=" ")
     print()
 
-def calc_profit(boxes, tax=20, min_t=50):
+def calc_profit(boxes, tax=10, min_t=50):
     """ Função de Avalição: Calcula o lucro de uma lista de caixas """
     temp = []
     for b in boxes:
@@ -41,7 +41,7 @@ def fit(items, fit='first', sortedlist=False, box_size=1000, verbose=False, min_
         'first' - First Fit (coloca o item na primeira caixa disponível que o couber)
         'best' - Best Fit (coloca o item na caixa que tiver menos espaço disponivel e couber) 
         'worst' - Worst Fit (coloca o item na caixa que tiver mais espaço disponível e couber)
-        'avoidtaxes' - Tenta colocar o máximo de itens em caixas cujo valor total não é tarifado)
+        'avoidtaxes' - (Tenta colocar o máximo de itens em caixas cujo valor total de cada caixa não é taxado)
      """
     # Primeiro Passo: Ordena a lista da forma especificada 
     if sortedlist: items = sorted(items,key=attrgetter('size'), reverse=True)
@@ -52,9 +52,9 @@ def fit(items, fit='first', sortedlist=False, box_size=1000, verbose=False, min_
 
     if fit in ("first", "best", "worst"): #se uma dessas heuristicas for escolhida, entra nesse loop
         for item in items: #itera todos os itens da lista
-            if fit == 'best' and boxes: #organiza as caixas com as mais cheias primeiro
+            if fit == 'worst' and boxes: #organiza as caixas com as mais cheias primeiro
                 boxes = sorted(boxes, key=attrgetter('used_size')) 
-            if fit == 'worst' and boxes: #organiza as caixas com as menos cheias primeiro
+            if fit == 'best' and boxes: #organiza as caixas com as menos cheias primeiro
                 boxes = sorted(boxes, reverse=True, key=attrgetter('used_size')) 
             #caso não entre nos ifs anteriores, é usado ordem de chegada (first-fit)
 
@@ -108,8 +108,7 @@ def fit(items, fit='first', sortedlist=False, box_size=1000, verbose=False, min_
 def multifit(file=None,taxrate=10,verbose=False):
     """ Executa todas Heurísticas com a lista de objetos definidos, utilizando o
     valor da taxa definida, e retorna o melhor variante do algorítimo
-    
-    Lista de Caixas em armazenada em n[1][1] """
+    """
     my_items = load_from_file(file)
 
     if verbose: #imprime alguns detalhes, caso verboso
@@ -132,7 +131,9 @@ def multifit(file=None,taxrate=10,verbose=False):
 
     results = sorted(results, key=attrgetter('profit'),reverse=True) #as melhores resultados são colocadas no topo da lista
     finalresult = results[0] #o melhor resultado é o primeiro
-    if verbose: finalresult.print_result_h() #se verboso, imprime o resultado
+    if verbose: 
+        for x in results:
+            x.print_result_h() #se verboso, imprime o resultado
     return finalresult #retorna o melhor resultado
 
 
@@ -233,7 +234,7 @@ def nbhood(result_h, algo='auto', \
     if verbose:  # se verboso, imprimimos os cinco melhores resultados
         for i in range(5):
             results[i].print_result()
-        print("Melhor Resultado da Vizinhança"); results[0].print_result()        
+        print("- Melhor Vizinhança: ",end=''); results[0].print_result()        
     finalresult = results[0] # melhor resultado é o primeiro da lista
 
     if meta: return results #se queremos utilizar o resultado em uma metaheurisitca, retornamos toda a lista
@@ -265,10 +266,44 @@ def vnd(solution, taxrate=10, algo='auto', randomseed="i_will_survive_this",\
     return solution #retorna a melhor solução (objeto Result)
 
 
-
-def smarter_vnd(solutions, taxrate=10, algo='auto', randomseed="i_will_survive_this",\
+def smarter_vnd(solutions, taxrate=10, algo='auto', randomseed="i_wish_i_was_dead",\
         verbose = False):
     """ Metaheurística: VND com Backtracking """
+    old_profit = solutions[0].profit #função de avaliação inicial
+    optimal_solution = solutions[0] #solução otima inicial
+    it,bk = 0,0 #contadores de vizinhanças visitadas e backtracking
+
+    while solutions: #enquanto ouver soluções na lista
+        if verbose: print("> Visitando Vizinhança " + str(it+1))
+        new_solutions = nbhood(solutions[0], algo=algo, taxrate=taxrate, randomseed=randomseed,\
+                            verbose=verbose, meta=True) #procura as vizinhanças locais, e salva a a lista num objeto
+
+        if new_solutions[0].profit > optimal_solution.profit: # o se o valor da melhor nova solução for melhor que a solução otima anterior
+            solutions = new_solutions #atualiza o valor da lista de soluções
+            optimal_solution = solutions[0] # a nova solução otima é a primeira da lista
+            it += 1 #atualiza o contador de vizinhanaça
+            bk = 0 #reseta o contador de backtracking
+        else:
+            bk += 1 #incrementa o backgracking
+            if bk == 20: break # limita o backtracking em 20 vizinhanças, por questões de tempo computacional
+            print("Fazendo Backtracking: " + str(bk)) 
+            solutions.pop(0) #remove a solução testada da lista.
+
+            
+    if verbose:
+        print()
+        print(">> Melhor Resultado Final:")
+        optimal_solution.print_result()
+        print("Melhoria: " + str(old_profit) + " ---> " + str(optimal_solution.profit) + " (+" + str(optimal_solution.profit - old_profit) + ")")
+        print("Vizinhanças Visitadas para geração do resultado: " + str(it))
+
+    return solutions
+
+
+
+def smarter_vnd_worsening(solutions, taxrate=10, algo='auto', randomseed="i_will_survive_this",\
+        verbose = False):
+    """ Metaheurística: VND com Backtracking, com movimentos em soluções suboptimas """
     old_profit = solutions[0].profit #função de avaliação inicial
     optimal_solution = solutions[0] #solução otima inicial
     it,bk = 0,0 #contadores de vizinhanças visitadas e backtracking
@@ -291,7 +326,7 @@ def smarter_vnd(solutions, taxrate=10, algo='auto', randomseed="i_will_survive_t
         else:
             bk += 1 #incrementa o backgracking
             if bk == 10: 
-                if global_maximum > optimal_solution:
+                if global_maximum.profit > optimal_solution.profit:
                     optimal_solution = global_maximum
                     break # limita o backtracking em 10 vizinhanças, por questões de tempo computacional
             print("Fazendo Backtracking: " + str(bk))

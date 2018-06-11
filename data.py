@@ -85,7 +85,7 @@ class Result:
 
     def print_result(self):
         """ Impreme os Resultados dos Movimentos de Vizinhança """
-        print(str(self.profit) + " " + str(self.box_amount) + ' :' + \
+        print(str(self.profit) + " " + str(self.box_amount) + ' : ' + \
         str(self.nb_algo) + ',' + str(self.nb_order) + ',' + str(self.nb_pos) \
         + '/' + str(self.fit_order) + ',' + str(self.sort_order)+ ' ')
 
